@@ -1,0 +1,26 @@
+{
+  "name": "multi-signature",
+  "version": "0.1.0",
+  "description": "<version><codec><signature>",
+  "main": "index.js",
+  "repository": "https://github.com/vandeurenglenn/multi-signature",
+  "author": "vandeurenglenn <vandeurenglenn@gmail.com>",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "build": "rollup -c"
+  },
+  "keywords": [
+    "signature", "sign", "verify", "multi", "leofcoin"
+  ],
+  "dependencies": {
+    "bs58": "^4.0.1",
+    "crypto-js": "^3.1.9-1",
+    "ripemd160": "^2.0.2"
+  },
+  "devDependencies": {
+    "rollup": "^0.59.0",
+    "rollup-plugin-uglify": "^3.0.0",
+    "tape": "^4.9.0"
+  }
+}
