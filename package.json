@@ -1,6 +1,6 @@
 {
   "name": "multi-signature",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "<version><codec><signature>",
   "main": "index.js",
   "repository": "https://github.com/vandeurenglenn/multi-signature",
