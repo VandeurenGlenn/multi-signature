@@ -1,13 +1,13 @@
-import hmac from 'crypto-js/hmac-sha3';
 import { encode, decode } from 'bs58';
-import RIPEMD160 from 'ripemd160';
+import ecc from 'tiny-secp256k1';
+import varint from 'varint';
 
 export default class MultiSignature {
 	constructor(version, multiCodec) {
 		if (version === undefined) throw ReferenceError('version undefined');
 		if (multiCodec === undefined) throw ReferenceError('multicodec undefined');
-		this.version = version;
 		this.multiCodec = multiCodec;
+		this.version = version;
 	}
 
 	set multiSignature(value) {
@@ -30,14 +30,12 @@ export default class MultiSignature {
 		return this.decode(encoded);
 	}
 
-	sign(hash, address) {
-		if (!hash || !address)
-			throw ReferenceError(`${hash ? 'address' : 'hash'} undefined`);
-    else if (typeof hash !== 'string')
-      throw TypeError(`${Boolean(typeof hash === 'string') ? 'address' : 'hash'} is not a typeof string`);
+	sign(hash, privateKey) {
+		if (!hash || !privateKey)
+			throw ReferenceError(`${hash ? 'privateKey' : 'hash'} undefined`);
 
-		let signature = hmac(hash, address, 256).toString();
-    signature = new RIPEMD160().update(signature).digest();
+		const signature = ecc.sign(hash, privateKey);
+
 		this.decoded = {
 			version: this.version,
 			multiCodec: this.multiCodec,
@@ -49,15 +47,17 @@ export default class MultiSignature {
 	/**
    * verify signature (multiSignature.signature)
    */
-	verifySignature(signature, hash, address) {
-		return Boolean(signature === hmac(hash, address).toString());
+	verifySignature(signature, hash, publicKey) {
+		return ecc.verify(hash, publicKey, signature);
 	}
 
 	/**
    * verify multiSignature
    */
-	verify(multiSignature, hash, address) {
-		return Boolean(multiSignature === this.sign(hash, address));
+	verify(multiSignature, hash, publicKey) {
+		multiSignature = this.decode(multiSignature);
+		return ecc.verify(hash, publicKey, multiSignature.signature)
+		// return Boolean(multiSignature === this.sign(hash, publicKey));
 	}
 
 	/**
@@ -69,8 +69,8 @@ export default class MultiSignature {
 		signature = signature || this.signature;
 		if (!signature) throw ReferenceError('signature undefined');
 		const buffer = Buffer.concat([
-			Buffer.from(this.version.toString()),
-			Buffer.from(this.multiCodec.toString()),
+			Buffer.from(varint.encode(this.version)),
+			Buffer.from(varint.encode(this.multiCodec)),
 			signature
 		]);
 		this.multiSignature = encode(buffer);
@@ -85,15 +85,18 @@ export default class MultiSignature {
 	decode(multiSignature) {
 		if (multiSignature) this.multiSignature = multiSignature;
 		if (!this.multiSignature) throw ReferenceError('multiSignature undefined');
-		const buffer = decode(this.multiSignature);
-		const version = parseInt(buffer.slice(0, 1));
-		const codec = parseInt(buffer.slice(1, 5));
-		const signature = buffer.slice(5, buffer.length);
+		let buffer = decode(this.multiSignature);
+		const version = varint.decode(buffer);
+		buffer = buffer.slice(varint.decode.bytes)
+		const codec = varint.decode(buffer);
+		const signature = buffer.slice(varint.decode.bytes);
+
 		if (version !== this.version) throw TypeError('Invalid version');
 		if (this.multiCodec !== codec) throw TypeError('Invalid multiCodec');
+
   	this.decoded = {
 			version,
-			multiCodec,
+			multiCodec: codec,
 			signature
 		};
 		return this.decoded;
