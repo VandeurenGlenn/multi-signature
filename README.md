@@ -31,15 +31,74 @@ multi2.multiSignature; // base58 encoded MultiSignature
 multi2.decoded // { version, codec, signature }
 ```
 ## use case
-Future proof cryptocurrency signatures (signatures are versionized & each version should be supported (with exceptions)).
+Future proof cryptocurrency signatures (signatures are versioned & each version should be supported (with exceptions)).
 In short:
-- disables the need for a "fork" when changing signature behavior.
-- nodes that aren't updated can (atleast for some time) contribute to the network by handling other unupdated nodes their transactions.
-- updated nodes can stil handle older nodes their transactions (untill some point in time or whenever an vulnerability is found.)
-- flag vulnerable versions by sending a flagMessage (flags are send to every node & accepted only when 3/4 off total nodes agree, this results into an lockdown off the flagged node, all other nodes will ignore it untill the flagged has updated to the needed version).
+- disables the need for a "fork" when changing signature behaviour.
+- nodes that aren't updated can (atleast for some time) contribute to the network by handling other not updated nodes their transactions.
+- updated nodes can still handle older nodes their transactions (until some point in time or whenever an vulnerability is found.)
+- flag vulnerable versions by sending a flag Message (flags are send to every node & accepted only when 3/4 off total nodes agree, this results into an lockdown off the flagged node, all other nodes will ignore it until the flagged has updated to the needed version).
 
 ## API
-TODO...
+
+### sign
+##### hash
+`description`: data to sign<br>
+`type`: buffer
+##### key
+`description`: privateKey<br>
+`type`: buffer<br>
+
+```js
+new MultiSignature(version, codec).sign(data, key)
+```
+
+### verify
+##### multiSignature
+`description`: multiSignature to verify<br>
+`type`: string (MultiSignature encoded)<br>
+##### hash
+`description`: data to verify<br>
+`type`: buffer<br>
+##### key
+`description`: publicKey<br>
+`type`: buffer<br>
+
+```js
+new MultiSignature(version, codec).verify(multiSignature, data, key)
+```
+
+### verifySignature
+##### signature
+`description`: signature to verify<br>
+`type`: buffer<br>
+##### hash
+`description`: data to verify<br>
+`type`: buffer<br>
+##### key
+`description`: publicKey<br>
+`type`: buffer<br>
+
+```js
+new MultiSignature(version, codec).verifySignature(signature, data, key)
+```
+
+### decode
+##### multiSignature
+`description`: multiSignature to decode<br>
+`type`: string (MultiSignature encoded)<br>
+
+```js
+new MultiSignature(version, codec).decode(multiSignature)
+```
+
+### encode
+##### signature
+`description`: signature<br>
+`type`: buffer<br>
+
+```js
+new MultiSignature(version, codec).encode(signature)
+```
 
 ## LICENSE
 Copyright (c) 2018 vandeurenglenn

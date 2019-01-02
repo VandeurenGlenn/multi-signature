@@ -57,7 +57,6 @@ export default class MultiSignature {
 	verify(multiSignature, hash, publicKey) {
 		multiSignature = this.decode(multiSignature);
 		return ecc.verify(hash, publicKey, multiSignature.signature)
-		// return Boolean(multiSignature === this.sign(hash, publicKey));
 	}
 
 	/**
