@@ -1,5 +1,5 @@
 const test = require('tape');
-const { encode } = require('bs58');
+const { encode, decode } = require('bs58');
 const MultiSignature = require('./');
 
 const { buffer, version, codec, signee, signature, publicKey } = {
@@ -14,10 +14,16 @@ const { buffer, version, codec, signee, signature, publicKey } = {
 test('MultiSignature', tape => {
   tape.plan(3);
   const multi = new MultiSignature(version, codec);
-	tape.equal(signature, multi.sign(buffer, signee), 'can sign');
+	tape.equal(signature.toString('hex'), multi.sign(buffer, signee).toString('hex'), 'can sign');
 
   const multi2 = new MultiSignature(version, codec);
   tape.ok(multi2.verify(signature, buffer, publicKey), 'can verify');
 
-  tape.equal(multi.export(), signature, 'can export multiSignature')
+  tape.equal(multi.export(), encode(signature), 'can export multiSignature')
+
+  const multi3 = new MultiSignature(0x00, 0x3c4);
+  tape.equal(leofcoin.signature.toString('hex'), multi3.sign(buffer, leofcoin.address).toString('hex'), 'can sign leofcoin hash');
+  // 
+  const multi4 = new MultiSignature(0x00, 0x3c4);
+  tape.ok(multi4.verify(leofcoin.signature, buffer, leofcoin.address), 'can verify leofcoin hash');
 });

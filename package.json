@@ -18,13 +18,14 @@
     "leofcoin"
   ],
   "dependencies": {
+    "bs32": "^0.1.5",
     "bs58": "^4.0.1",
     "tiny-secp256k1": "^1.0.1",
     "varint": "^5.0.0"
   },
   "devDependencies": {
-    "rollup": "^0.59.0",
+    "rollup": "^0.59.4",
     "rollup-plugin-uglify": "^3.0.0",
-    "tape": "^4.9.0"
+    "tape": "^4.11.0"
   }
 }

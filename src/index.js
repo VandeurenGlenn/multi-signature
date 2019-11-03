@@ -1,4 +1,5 @@
 import { encode, decode } from 'bs58';
+import bs32 from 'bs32';
 import ecc from 'tiny-secp256k1';
 import varint from 'varint';
 
@@ -23,11 +24,11 @@ export default class MultiSignature {
 	}
 
 	export() {
-		return this.multiSignature;
+		return encode(this.multiSignature);
 	}
 
 	import(encoded) {
-		return this.decode(encoded);
+		return decode(this.decode(encoded));
 	}
 
 	sign(hash, privateKey) {
@@ -67,12 +68,11 @@ export default class MultiSignature {
 	encode(signature) {
 		signature = signature || this.signature;
 		if (!signature) throw ReferenceError('signature undefined');
-		const buffer = Buffer.concat([
+		this.multiSignature = Buffer.concat([
 			Buffer.from(varint.encode(this.version)),
 			Buffer.from(varint.encode(this.multiCodec)),
 			signature
 		]);
-		this.multiSignature = encode(buffer);
 		return this.multiSignature;
 	}
 
@@ -84,12 +84,11 @@ export default class MultiSignature {
 	decode(multiSignature) {
 		if (multiSignature) this.multiSignature = multiSignature;
 		if (!this.multiSignature) throw ReferenceError('multiSignature undefined');
-		let buffer = decode(this.multiSignature);
+		let buffer = this.multiSignature;
 		const version = varint.decode(buffer);
 		buffer = buffer.slice(varint.decode.bytes)
 		const codec = varint.decode(buffer);
 		const signature = buffer.slice(varint.decode.bytes);
-
 		if (version !== this.version) throw TypeError('Invalid version');
 		if (this.multiCodec !== codec) throw TypeError('Invalid multiCodec');
 
@@ -99,5 +98,29 @@ export default class MultiSignature {
 			signature
 		};
 		return this.decoded;
+	}
+	
+	toHex() {
+		return this.multiSignature.toString('hex')
+	}
+	
+	fromHex(hex) {
+		return decode(Buffer.from(hex, 'hex'))
+	}
+	
+	toBs58() {
+		return encode(this.multiSignature)
+	}
+	
+	fromBs58(multiSignature) {
+		return decode(multiSignature)
+	}
+	
+	toBs32() {
+		return bs32.encode(this.multiSignature)
+	}
+	
+	fromBs32(multiSignature) {
+		return bs32.decode(multiSignature)
 	}
 }
