@@ -21,7 +21,7 @@
     "bs32": "^0.1.5",
     "bs58": "^4.0.1",
     "tiny-secp256k1": "^1.0.1",
-    "varint": "^5.0.0"
+    "varint": "^5.0.2"
   },
   "devDependencies": {
     "rollup": "^0.59.4",
