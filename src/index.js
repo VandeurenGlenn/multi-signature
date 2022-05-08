@@ -1,5 +1,5 @@
-import { encode, decode } from 'bs58';
-import bs32 from 'bs32';
+import base58 from '@vandeurenglenn/base58'
+import base32 from '@vandeurenglenn/base32'
 import ecc from 'tiny-secp256k1';
 import varint from 'varint';
 
@@ -24,11 +24,11 @@ export default class MultiSignature {
 	}
 
 	export() {
-		return encode(this.multiSignature);
+		return base58.encode(this.multiSignature);
 	}
 
 	import(encoded) {
-		return decode(this.decode(encoded));
+		return base58.decode(this.decode(encoded));
 	}
 
 	sign(hash, privateKey) {
@@ -99,28 +99,28 @@ export default class MultiSignature {
 		};
 		return this.decoded;
 	}
-	
+
 	toHex() {
 		return this.multiSignature.toString('hex')
 	}
-	
+
 	fromHex(hex) {
-		return decode(Buffer.from(hex, 'hex'))
+		return base58.decode(Buffer.from(hex, 'hex'))
 	}
-	
+
 	toBs58() {
-		return encode(this.multiSignature)
+		return base58.encode(this.multiSignature)
 	}
-	
+
 	fromBs58(multiSignature) {
-		return decode(multiSignature)
+		return base58.decode(multiSignature)
 	}
-	
+
 	toBs32() {
-		return bs32.encode(this.multiSignature)
+		return base32.encode(this.multiSignature)
 	}
-	
+
 	fromBs32(multiSignature) {
-		return bs32.decode(multiSignature)
+		return base32.decode(multiSignature)
 	}
 }
