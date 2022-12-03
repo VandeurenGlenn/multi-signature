@@ -1,6 +1,6 @@
-const test = require('tape');
-const { encode, decode } = require('bs58');
-const MultiSignature = require('./');
+import test from'tape'
+import base58 from '@vandeurenglenn/base58'
+import MultiSignature from './index.js'
 
 const { leofcoin, buffer, version, codec, signee, signature, publicKey } = {
   buffer: Buffer.alloc(32),
@@ -8,16 +8,16 @@ const { leofcoin, buffer, version, codec, signee, signature, publicKey } = {
   publicKey: Buffer.from('033f2870261a1f6e2a4a82ceb2032432c4fd606e818caab4ed9e8ec29f3c6d21ff', 'hex'),
   version: 0x00,
   codec: 0x01,
-  signature: decode('1A24H3g28Ze7AadvZUusNWcNW9zHjhNrHkePaYzSMAXm6X4se6HGcxrmofwpB7v6Ck5eycTYo2wB5ZAGojjjBpKVs')
+  signature: '1A24H3g28Ze7AadvZUusNWcNW9zHjhNrHkePaYzSMAXm6X4se6HGcxrmofwpB7v6Ck5eycTYo2wB5ZAGojjjBpKVs'
 }
 
 test('MultiSignature', tape => {
   tape.plan(3);
   const multi = new MultiSignature(version, codec);
-	tape.equal(signature.toString('hex'), multi.sign(buffer, signee).toString('hex'), 'can sign');
+	tape.equal(signature, base58.encode(multi.sign(buffer, signee)), 'can sign');
 
   const multi2 = new MultiSignature(version, codec);
-  tape.ok(multi2.verify(signature, buffer, publicKey), 'can verify');
+  tape.ok(multi2.verify(base58.decode(signature), buffer, publicKey), 'can verify');
 
-  tape.equal(multi.export(), encode(signature), 'can export multiSignature')
+  tape.equal(multi.export(), signature, 'can export multiSignature')
 });

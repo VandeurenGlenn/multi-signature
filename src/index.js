@@ -1,8 +1,8 @@
 import base58 from '@vandeurenglenn/base58'
 import base32 from '@vandeurenglenn/base32'
-import ecc from 'tiny-secp256k1';
+import secp256k1 from 'secp256k1'
 import varint from 'varint';
-
+const {ecdsaSign, ecdsaVerify} = secp256k1
 export default class MultiSignature {
 	constructor(version, multiCodec) {
 		if (version === undefined) throw ReferenceError('version undefined');
@@ -35,8 +35,7 @@ export default class MultiSignature {
 		if (!hash || !privateKey)
 			throw ReferenceError(`${hash ? 'privateKey' : 'hash'} undefined`);
 
-		const signature = ecc.sign(hash, privateKey);
-
+		const {signature} = ecdsaSign(hash, privateKey);
 		this.decoded = {
 			version: this.version,
 			multiCodec: this.multiCodec,
@@ -49,7 +48,7 @@ export default class MultiSignature {
    * verify signature (multiSignature.signature)
    */
 	verifySignature(signature, hash, publicKey) {
-		return ecc.verify(hash, publicKey, signature);
+		return ecdsaVerify(signature, hash, publicKey);
 	}
 
 	/**
@@ -57,7 +56,7 @@ export default class MultiSignature {
    */
 	verify(multiSignature, hash, publicKey) {
 		multiSignature = this.decode(multiSignature);
-		return ecc.verify(hash, publicKey, multiSignature.signature)
+		return ecdsaVerify(multiSignature.signature, hash, publicKey)
 	}
 
 	/**
@@ -68,11 +67,14 @@ export default class MultiSignature {
 	encode(signature) {
 		signature = signature || this.signature;
 		if (!signature) throw ReferenceError('signature undefined');
-		this.multiSignature = Buffer.concat([
-			Buffer.from(varint.encode(this.version)),
-			Buffer.from(varint.encode(this.multiCodec)),
-			signature
-		]);
+		const encodedVersion = varint.encode(this.version)
+		const encodedCodec = varint.encode(this.multiCodec)
+		const uint8Array = new Uint8Array(encodedVersion.length + encodedCodec.length + signature.length)
+
+		uint8Array.set(encodedVersion)
+		uint8Array.set(encodedCodec, encodedVersion.length)
+		uint8Array.set(signature, encodedVersion.length + encodedCodec.length)
+		this.multiSignature = uint8Array;
 		return this.multiSignature;
 	}
 
