@@ -19,13 +19,16 @@
     "leofcoin"
   ],
   "dependencies": {
-    "@vandeurenglenn/base32": "^1.1.0",
-    "@vandeurenglenn/base58": "^1.1.0",
+    "@vandeurenglenn/base32": "^1.2.0",
+    "@vandeurenglenn/base58": "^1.1.1",
     "secp256k1": "^4.0.3",
     "varint": "^5.0.0"
   },
   "devDependencies": {
+    "@rollup/plugin-typescript": "^10.0.1",
+    "@types/varint": "^6.0.1",
     "rollup": "^3.5.1",
-    "tape": "^4.11.0"
+    "tape": "^4.11.0",
+    "tslib": "^2.4.1"
   }
 }

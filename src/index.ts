@@ -2,9 +2,22 @@ import base58 from '@vandeurenglenn/base58'
 import base32 from '@vandeurenglenn/base32'
 import secp256k1 from 'secp256k1'
 import varint from 'varint';
+
 const {ecdsaSign, ecdsaVerify} = secp256k1
+
 export default class MultiSignature {
-	constructor(version, multiCodec) {
+	multiCodec: number
+	version: number
+	decoded: {
+		version: number,
+		multiCodec: number,
+		signature: Uint8Array
+	}
+	encoded: Uint8Array
+
+	#multiSignature: multiSignature
+
+	constructor(version: number | undefined, multiCodec: number | undefined) {
 		if (version === undefined) throw ReferenceError('version undefined');
 		if (multiCodec === undefined) throw ReferenceError('multicodec undefined');
 		this.multiCodec = multiCodec;
@@ -12,7 +25,7 @@ export default class MultiSignature {
 	}
 
 	set multiSignature(value) {
-		this._multiSignature = value;
+		this.#multiSignature = value;
 	}
 
 	get signature() {
@@ -20,18 +33,18 @@ export default class MultiSignature {
 	}
 
 	get multiSignature() {
-		return this._multiSignature || this.encoded || this.encode(this.signature);
+		return this.#multiSignature || this.encoded || this.encode(this.signature);
 	}
 
 	export() {
 		return base58.encode(this.multiSignature);
 	}
 
-	import(encoded) {
-		return base58.decode(this.decode(encoded));
+	import(encoded: base58String) {
+		return base58.decode(encoded);
 	}
 
-	sign(hash, privateKey) {
+	sign(hash: Uint8Array, privateKey: Uint8Array): multiSignature {
 		if (!hash || !privateKey)
 			throw ReferenceError(`${hash ? 'privateKey' : 'hash'} undefined`);
 
@@ -59,12 +72,7 @@ export default class MultiSignature {
 		return ecdsaVerify(multiSignature.signature, hash, publicKey)
 	}
 
-	/**
-   * encode multi signature to exportable format
-   * @param {buffer} signature base58 encoded string
-   * @return {object} base58 encoded multiSignature
-   */
-	encode(signature) {
+	encode(signature: Uint8Array): multiSignature {
 		signature = signature || this.signature;
 		if (!signature) throw ReferenceError('signature undefined');
 		const encodedVersion = varint.encode(this.version)
@@ -80,10 +88,10 @@ export default class MultiSignature {
 
 	/**
    * decode exported multi signature to object
-   * @param {string} multiSignature base58 encoded string
-   * @return {object} { version, multiCodec, signature }
+   * @param {multiSignature} multiSignature base58 encoded string
+   * @return {decodedMultiSignature} { version, multiCodec, signature }
    */
-	decode(multiSignature) {
+	decode(multiSignature: multiSignature): decodedMultiSignature {
 		if (multiSignature) this.multiSignature = multiSignature;
 		if (!this.multiSignature) throw ReferenceError('multiSignature undefined');
 		let buffer = this.multiSignature;
@@ -107,7 +115,7 @@ export default class MultiSignature {
 	}
 
 	fromHex(hex) {
-		return base58.decode(Buffer.from(hex, 'hex'))
+		return base58.decode(hex)
 	}
 
 	toBs58() {
