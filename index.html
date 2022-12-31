@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script type="module">
+    import Multi from "./browser.js"
+    const version = 0x00
+    const codec = 0x01
+    const message = crypto.getRandomValues(new Uint8Array(32))
+    const signee = new Uint8Array([
+      180, 236, 195, 252,  70, 139, 9, 46,
+      76, 169, 229, 168,  89, 239, 159, 22,
+      212, 205, 148, 172,  50,  42, 180, 67,
+      98, 107, 204, 186, 226, 145, 188, 87
+    ])
+    
+    const publicKey = new Uint8Array([
+      3,  63,  40, 112,  38,  26,  31, 110,
+      42,  74, 130, 206, 178,   3,  36,  50,
+      196, 253,  96, 110, 129, 140, 170, 180,
+      237, 158, 142, 194, 159,  60, 109,  33,
+      255
+    ])
+    
+    const multi = new Multi(version, codec)
+
+    multi.sign(message, signee)
+    console.log(multi.toBs32());
+    console.log(multi.toBs32Hex());
+    console.log(multi.toBs58());
+    console.log(multi.toBs58Hex());
+  </script>
+</body>
+</html>
