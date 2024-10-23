@@ -28,7 +28,7 @@
     "@vandeurenglenn/base32": "^1.2.0",
     "@vandeurenglenn/base58": "^1.1.1",
     "@vandeurenglenn/typed-array-concat": "^1.0.2",
-    "secp256k1": "^5.0.0",
+    "secp256k1": "^5.0.1",
     "varint": "github:vandeurenglenn/varint"
   },
   "devDependencies": {
