@@ -1,42 +1,139 @@
-import test from'tape'
-import base58 from '@vandeurenglenn/base58'
-import MultiSignature from './index.js'
-const stringEncoded = '0,1,195,16,102,158,127,42,238,9,169,159,16,118,5,238,43,39,102,111,122,112,24,193,115,45,96,124,206,243,118,175,169,206,104,95,202,26,241,176,17,58,18,175,58,246,64,112,79,90,6,156,132,55,176,61,158,88,77,159,125,162,215,187,6,202'
-const { buffer, version, codec, signee, signature, publicKey, signatureBase58 } = {
-  buffer: new Uint8Array(32),
-  signee: new Uint8Array(Buffer.from('b4ecc3fc468b092e4ca9e5a859ef9f16d4cd94ac322ab443626bccbae291bc57', 'hex')),
-  publicKey: new Uint8Array(Buffer.from('033f2870261a1f6e2a4a82ceb2032432c4fd606e818caab4ed9e8ec29f3c6d21ff', 'hex')),
-  version: 0x00,
-  codec: 0x01,
-  
-  signature: new Uint8Array(stringEncoded.split(',')),
-  signatureBase58: '1A24H3g28Ze7AadvZUusNWcNW9zHjhNrHkePaYzSMAXm6X4se6HGcxrmofwpB7v6Ck5eycTYo2wB5ZAGojjjBpKVs'
+import { createHash } from "crypto";
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import MultiSignature from "./index.js";
+
+const privateKey = new Uint8Array([
+  70, 104, 127, 235, 242, 158, 53, 129, 32, 95, 3, 113, 190, 192, 153, 50, 14,
+  126, 187, 196, 56, 173, 189, 17, 253, 187, 87, 165, 52, 215, 68, 115,
+]);
+
+const publicKey = new Uint8Array([
+  59, 241, 162, 229, 72, 24, 7, 120, 85, 45, 175, 79, 122, 126, 58, 56, 48, 59,
+  21, 177, 153, 174, 42, 93, 54, 210, 1, 120, 53, 199, 55, 33,
+]);
+
+function createMessage(text) {
+  return createHash("sha256").update(Buffer.from(text), "utf8").digest();
 }
 
-test('MultiSignature', tape => {
-  tape.plan(7);
+test("MultiSignature schnorr sign/verify", async (t) => {
+  const version = 0x01;
+  const codec = 0x01;
   const multi = new MultiSignature(version, codec);
-  multi.sign(buffer, signee)
-  const base58Encoded = multi.toBs58()
-  console.log(base58Encoded);
-	tape.equal(signatureBase58, base58Encoded, 'can sign');
-  
 
-  const multi2 = new MultiSignature(version, codec);
-  tape.ok(multi2.verify(base58.decode(signatureBase58), buffer, publicKey), 'can verify');
-  
+  const message = createMessage("test message schnorr");
+  await multi.sign(message, privateKey);
+  const msig = multi.multiSignature;
+  const verified = await multi.verify(msig, message, publicKey);
+  assert.ok(verified, "MultiSignature schnorr sign/verify works");
+});
 
-  tape.equal(multi.export(), signatureBase58, 'can export multiSignature')
-  
-  multi.fromString(stringEncoded)
-  tape.deepEqual(base58.decode(base58Encoded), multi.multiSignature, 'can load from string');
+test("MultiSignature schnorr sign/verify version 0x00", async (t) => {
+  const version = 0x00;
+  const codec = 0x01;
+  const multi = new MultiSignature(version, codec);
 
-  multi.fromBs58(base58Encoded)
-  tape.deepEqual(base58.decode(base58Encoded), multi.multiSignature, 'can load from base58');
+  const message = createMessage("test message schnorr");
+  await multi.sign(message, privateKey);
+  const msig = multi.multiSignature;
+  const verified = await multi.verify(msig, message, publicKey);
+  assert.ok(
+    verified,
+    "MultiSignature schnorr sign/verify works for version 0x00",
+  );
+});
 
-  multi.fromBs32(multi.toBs32())
-  tape.deepEqual(base58.decode(base58Encoded), multi.multiSignature, 'can load from base32');
+test("MultiSignature constructor requires version and codec", () => {
+  assert.throws(() => new MultiSignature(undefined, 0x01), /version undefined/);
+  assert.throws(
+    () => new MultiSignature(0x01, undefined),
+    /multicodec undefined/,
+  );
+});
 
-  multi.fromBs32Hex(multi.toBs32Hex())
-  tape.deepEqual(base58.decode(base58Encoded), multi.multiSignature, 'can load from base32');
+test("MultiSignature sign requires hash and private key", async () => {
+  const multi = new MultiSignature(0x01, 0x01);
+  const message = createMessage("missing args");
+
+  await assert.rejects(multi.sign(undefined, privateKey), /message undefined/);
+  await assert.rejects(multi.sign(message, undefined), /privateKey undefined/);
+});
+
+test("MultiSignature encode and decode round-trip", () => {
+  const multi = new MultiSignature(0x01, 0x01);
+  const signature = Uint8Array.from({ length: 64 }, (_, index) => index);
+
+  const encoded = multi.encode(signature);
+  const decoded = multi.decode(encoded);
+
+  assert.deepEqual(decoded, {
+    version: 0x01,
+    multiCodec: 0x01,
+    signature,
+  });
+  assert.deepEqual(multi.multiSignature, encoded);
+});
+
+test("MultiSignature serializes and deserializes across encodings", async () => {
+  const version = 0x01;
+  const codec = 0x01;
+  const multi = new MultiSignature(version, codec);
+  const message = createMessage("round trip");
+
+  await multi.sign(message, privateKey);
+
+  const msig = multi.multiSignature;
+  const bs58 = multi.toBs58();
+  const bs32 = multi.toBs32();
+  const bs32Hex = multi.toBs32Hex();
+  const bs58Hex = multi.toBs58Hex();
+
+  assert.deepEqual(multi.import(bs58), msig);
+  assert.equal(multi.export(), bs58);
+  assert.deepEqual(multi.fromBs58(bs58), multi.decoded);
+  assert.deepEqual(multi.fromBs32(bs32), multi.decoded);
+  assert.deepEqual(multi.fromBs32Hex(bs32Hex), multi.decoded);
+  assert.deepEqual(multi.fromBs58Hex(bs58Hex), multi.decoded);
+  assert.equal(multi.signature.length, 64);
+  assert.equal(multi.decoded.version, version);
+  assert.equal(multi.decoded.multiCodec, codec);
+});
+
+test("MultiSignature decode rejects mismatched version and codec", async () => {
+  const message = createMessage("decode mismatch");
+  const source = new MultiSignature(0x01, 0x01);
+  await source.sign(message, privateKey);
+  const msig = source.multiSignature;
+
+  assert.throws(
+    () => new MultiSignature(0x02, 0x01).decode(msig),
+    /Invalid version/,
+  );
+  assert.throws(
+    () => new MultiSignature(0x01, 0x02).decode(msig),
+    /Invalid multiCodec/,
+  );
+});
+
+test("MultiSignature verification fails for tampered inputs", async () => {
+  const multi = new MultiSignature(0x01, 0x01);
+  const message = createMessage("tamper check");
+
+  await multi.sign(message, privateKey);
+  const msig = multi.multiSignature;
+
+  const tamperedSignature = new Uint8Array(multi.signature);
+  tamperedSignature[tamperedSignature.length - 1] ^= 0x01;
+  const tamperedMsig = new Uint8Array(msig);
+  tamperedMsig[tamperedMsig.length - 1] ^= 0x01;
+  const wrongPublicKey = new Uint8Array(publicKey);
+  wrongPublicKey[0] ^= 0x01;
+
+  assert.equal(
+    await multi.verifySignature(tamperedSignature, message, publicKey),
+    false,
+  );
+  assert.equal(await multi.verify(tamperedMsig, message, publicKey), false);
+  assert.equal(await multi.verify(msig, message, wrongPublicKey), false);
 });
