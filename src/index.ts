@@ -1,7 +1,7 @@
 import * as secp256k1 from "@noble/secp256k1";
 import base58, { base58HexString, base58String } from "@vandeurenglenn/base58";
 import base32, { base32HexString, base32String } from "@vandeurenglenn/base32";
-import { BinaryReader, BinaryWriter, varUintLength } from '@leofcoin/codecs/binary';
+import { BinaryReader, BinaryWriter, varUintLength } from '@leofcoin/binary';
 import { createHash } from "crypto";
 
 secp256k1.hashes.sha256 = (message) => {
