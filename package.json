@@ -30,7 +30,7 @@
     "@noble/secp256k1": "^3.1.0",
     "@vandeurenglenn/base32": "^1.2.4",
     "@vandeurenglenn/base58": "^1.1.9",
-    "@leofcoin/binary": "^1.0.0"
+    "@leofcoin/binary": "^1.0.1"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
