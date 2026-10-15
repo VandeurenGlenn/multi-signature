@@ -1,8 +1,7 @@
 import * as secp256k1 from "@noble/secp256k1";
-import typedArrayConcat from "@vandeurenglenn/typed-array-concat";
 import base58, { base58HexString, base58String } from "@vandeurenglenn/base58";
 import base32, { base32HexString, base32String } from "@vandeurenglenn/base32";
-import varint from "varint";
+import { BinaryReader, BinaryWriter, varUintLength } from '@leofcoin/binary';
 import { createHash } from "crypto";
 
 secp256k1.hashes.sha256 = (message) => {
@@ -98,11 +97,8 @@ export default class MultiSignature {
     signature = signature || this.signature;
     if (!signature) throw ReferenceError("signature undefined");
 
-    this.#multiSignature = typedArrayConcat([
-      varint.encode(this.version),
-      varint.encode(this.multiCodec),
-      signature,
-    ]);
+    const writer = new BinaryWriter(varUintLength(this.version) + varUintLength(this.multiCodec) + signature.length);
+    this.#multiSignature = writer.writeVarUint(this.version).writeVarUint(this.multiCodec).writeBytes(signature).finish();
     return this.multiSignature;
   }
 
@@ -116,14 +112,11 @@ export default class MultiSignature {
   ): decodedMultiSignature {
     if (multiSignature) this.#multiSignature = multiSignature;
     if (!this.multiSignature) throw ReferenceError("multiSignature undefined");
-    let buffer = this.multiSignature;
-    const version = varint.decode(buffer);
-    buffer = buffer.subarray(varint.decode.bytes);
-
-    const codec = varint.decode(buffer);
-    buffer = buffer.subarray(varint.decode.bytes);
-
-    const signature = buffer.subarray(0, buffer.length);
+    const reader = new BinaryReader(this.multiSignature);
+    // Keep legacy padded-header acceptance; do not change signature wire rules.
+    const version = reader.readVarUint(false);
+    const codec = reader.readVarUint(false);
+    const signature = reader.readBytes(reader.remaining);
     console.log("[decode] extracted signature length:", signature.length);
     console.log(
       "[decode] extracted signature (hex):",
@@ -145,7 +138,7 @@ export default class MultiSignature {
   }
 
   fromString(string: string) {
-    return this.decode(new Uint8Array(string.split(",")));
+    return this.decode(new Uint8Array(string.split(",").map(Number)));
   }
 
   toBs58() {

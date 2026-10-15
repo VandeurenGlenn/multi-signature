@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "multi-signature",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "<version><codec><signature>",
   "exports": {
     ".": {
@@ -16,7 +16,8 @@
   "scripts": {
     "watch": "rollup -c -w",
     "rollup": "rollup -c",
-    "build": "npm run rollup"
+    "build": "npm run rollup",
+    "test:encoding": "node --test encoding.test.js"
   },
   "keywords": [
     "signature",
@@ -29,13 +30,13 @@
     "@noble/secp256k1": "^3.1.0",
     "@vandeurenglenn/base32": "^1.2.4",
     "@vandeurenglenn/base58": "^1.1.9",
-    "@vandeurenglenn/typed-array-concat": "^1.0.3",
-    "varint": "github:vandeurenglenn/varint"
+    "@leofcoin/binary": "^1.0.1"
   },
   "devDependencies": {
+    "@types/node": "^24.0.0",
     "@rollup/plugin-typescript": "^12.3.0",
-    "@types/varint": "^6.0.3",
     "rollup": "^4.60.4",
-    "tslib": "^2.8.1"
+    "tslib": "^2.8.1",
+    "typescript": "^6.0.3"
   }
 }
