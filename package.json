@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "multi-signature",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "<version><codec><signature>",
   "exports": {
     ".": {
